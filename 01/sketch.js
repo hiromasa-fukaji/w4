@@ -1,107 +1,99 @@
-/**
- * Ethereal Clouds Sketch
- * Organic, randomly placed cloud-like objects using Perlin noise and soft gradients.
- */
+let resSlider, resText;
+let aspect, h, w;
+let resnum = -1;
+let coldiv = 3;
+let linenum = 2;
+let imgs = [];
+let imagenames = ['image.jpg', 'image.jpg', 'image.jpg'];
 
-let clouds = [];
+// 各画像ごとの線色と線幅スケール [太い側, 細い側]
+let lineColors = ['#fff000ff', '#6097eaff', '#000000ff'];
+let lineWidths = [
+    [1.0, 0.1],
+    [0.5, 0.0],
+    [0.25, 0.0]
+];
+
+function preload() {
+    for (let i = 0; i < imagenames.length; i++) {
+        imgs.push(loadImage(imagenames[i]));
+    }
+}
 
 function setup() {
-    createCanvas(windowWidth, windowHeight);
-    colorMode(HSB, 360, 100, 100, 1);
-    noStroke();
-
-    // Initialize a set of clouds
-    for (let i = 0; i < 15; i++) {
-        clouds.push(new Cloud());
+    h = 148 * 5;
+    w = 100 * 5;
+    aspect = w / h;
+    createCanvas(w, h);
+    for (let i = 0; i < imgs.length; i++) {
+        imgs[i].resize(w, h);
+        imgs[i].filter(BLUR, 5);
+        imgs[i].loadPixels();
     }
+    colorMode(RGB);
+    background(255);
+    pixelDensity(1);
+    setupUIs();
+    updateUIs();
 }
 
 function draw() {
-    // Beautiful sky gradient
-    drawSky();
+    updateUIs();
+}
 
-    fill("#ffff00");
-    noStroke();
-    textAlign(LEFT, TOP);
-    textSize(12);
-    text('p5.jsで記述して。キャンバス上を覆う雲のようなオブジェクトをランダムに配置して。', 5, 5);
+function setupUIs() {
+    let saveBtn = createButton('Save Image');
+    saveBtn.position(18, 35);
+    saveBtn.mousePressed(() => saveCanvas('output', 'png'));
+    let svgBtn = createButton('Save SVG');
+    svgBtn.position(18, 60);
+    svgBtn.mousePressed(() => save('output.svg'));
+    resSlider = createSlider(5, 50, 40, 1);
+    resSlider.position(15, 10);
+    resSlider.size(150);
+    resText = createP('');
+    resText.position(170, -8);
+}
 
-    // Update and show clouds
-    for (let cloud of clouds) {
-        cloud.update();
-        cloud.display();
+function updateUIs() {
+    if (resnum != resSlider.value()) {
+        resnum = resSlider.value();
+        resText.elt.innerHTML = resnum;
+        drawVerticalThickLines();
     }
 }
 
-function drawSky() {
-    // Draw a radial or linear gradient background for the sky
-    for (let y = 0; y < height; y++) {
-        let inter = map(y, 0, height, 0, 1);
-        let c = lerpColor(color(210, 80, 20), color(220, 40, 60), inter);
-        stroke(c);
-        line(0, y, width, y);
-    }
-}
+function drawVerticalThickLines() {
+    background(255);
+    let resnumX = resnum;
+    let resnumY = resnum / aspect;
+    noFill();
+    strokeCap(SQUARE);
 
-class Cloud {
-    constructor() {
-        this.init();
-    }
 
-    init() {
-        this.x = random(-200, width + 200);
-        this.y = random(0, height * 0.7);
-        this.speed = random(0.2, 1.0);
-        this.size = random(100, 300);
-        this.numCircles = floor(random(15, 30));
-        this.offsets = [];
-        this.colors = [];
-
-        // Create random offsets for each circle in the cloud to make it "fluffy"
-        for (let i = 0; i < this.numCircles; i++) {
-            this.offsets.push({
-                x: random(-this.size * 0.6, this.size * 0.6),
-                y: random(-this.size * 0.3, this.size * 0.3),
-                w: random(this.size * 0.5, this.size),
-                h: random(this.size * 0.4, this.size * 0.8),
-                noiseOffset: random(1000)
-            });
-            // Varying whites and light purples
-            this.colors.push(color(random(200, 260), random(5, 15), 100, random(0.01, 0.05)));
+    for (let t = 0; t < imgs.length; t++) {
+        let img = imgs[t];
+        stroke(lineColors[t]);
+        for (let i = 0; i < resnumX; i++) {
+            for (let n = 0; n < resnumY; n++) {
+                let sx = width / resnumX;
+                let sy = height / resnumY;
+                let xindex = round(min((i + 0.5) * sx, width));
+                let yindex = round(min((n + 0.5) * sy, height));
+                let index = min(xindex + yindex * img.width, img.pixels.length / 4 - 1);
+                let col = color(img.pixels[index * 4], img.pixels[index * 4 + 1], img.pixels[index * 4 + 2]);
+                let bri = brightness(col) / 100.0;
+                let colindex = min(floor(bri * coldiv), coldiv - 1);
+                strokeWeight(map(colindex, 0, coldiv - 1, sx * lineWidths[t][0], sx * lineWidths[t][1]));
+                for (let j = 0; j < linenum; j++) {
+                    let lx = sx * i + sx / linenum * j;
+                    let ly1 = sy * n;
+                    let ly2 = sy * (n + 1) + 0.5;
+                    line(lx + sx * 0.25, ly1, lx + sx * 0.25, ly2);
+                }
+            }
         }
     }
 
-    update() {
-        this.x += this.speed;
-
-        // Wrap around logic
-        if (this.x - this.size > width) {
-            this.x = -this.size * 2;
-            this.y = random(0, height * 0.7);
-        }
-    }
-
-    display() {
-        noStroke();
-        for (let i = 0; i < this.numCircles; i++) {
-            let off = this.offsets[i];
-            fill(this.colors[i]);
-
-            // Add a bit of movement to individual puffs
-            let xNoise = noise(off.noiseOffset + frameCount * 0.005) * 20 - 10;
-            let yNoise = noise(off.noiseOffset + 100 + frameCount * 0.005) * 10 - 5;
-
-            ellipse(this.x + off.x + xNoise, this.y + off.y + yNoise, off.w, off.h);
-        }
-    }
 }
 
-function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
-}
-
-function keyPressed() {
-    if (key === 's' || key === 'S') {
-        saveCanvas('ethereal_clouds', 'png');
-    }
-}

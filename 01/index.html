@@ -3,49 +3,29 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dreamy Clouds - p5.js</title>
+    <title>Vertical Thick Lines - p5.js</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #1a2a6c;
-            /* Soft dark blue base */
+            background-color: #ffffff;
             overflow: hidden;
-            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         canvas {
             display: block;
         }
-
-        .ui-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            color: white;
-            pointer-events: none;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            z-index: 10;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            opacity: 0.8;
-        }
     </style>
 </head>
 
 <body>
-    <div class="ui-container">
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
     <script src="sketch.js"></script>
 </body>
 
